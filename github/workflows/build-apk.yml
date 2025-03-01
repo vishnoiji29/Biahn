@@ -1,1 +1,60 @@
+name: Build and Release APK
 
+on:
+  push:
+    branches:
+      - main  # जब main ब्रांच में कोड पुश होगा तो वर्कफ़्लो चलेगा
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest  # GitHub का Linux वर्चुअल मशीन यूज़ होगा
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3  # कोड को GitHub वर्कफ़्लो में लोड करेगा
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18  # अपनी React Native की Node.js वर्ज़न चेक करें
+
+      - name: Install Dependencies
+        run: npm install  # सभी निर्भरताएँ इंस्टॉल करेगा
+
+      - name: Install Java and Gradle
+        run: sudo apt update && sudo apt install -y openjdk-11-jdk
+
+      - name: Build APK
+        run: cd android && ./gradlew assembleRelease
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: android/app/build/outputs/apk/release/app-release.apk
+          
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          release_name: Release v1.0.${{ github.run_number }}
+          draft: false
+          prerelease: false
+
+      - name: Upload APK to Release
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: android/app/build/outputs/apk/release/app-release.apk
+          asset_name: app-release.apk
+          asset_content_type: application/vnd.android.package-archive
