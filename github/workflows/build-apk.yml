@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: Build APK
-    runs-on: ubuntu-latest  # GitHub का Linux वर्चुअल मशीन यूज़ होगा
+    runs-on: ubuntu-latest  # GitHub का Linux वर्चुअल मशीjन यूज़ होगा
 
     steps:
       - name: Checkout Repository
